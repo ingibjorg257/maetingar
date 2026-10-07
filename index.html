@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<title>Mætingar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F1F3F2; --surface:#FFFFFF; --ink:#17212B; --muted:#5C6975; --line:#D8DDE1;
+  --accent:#1D5C7A; --accent-ink:#FFFFFF; --ok:#2B8A57; --miss:#B9472F; --soft:#E6EDF1;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10171D; --surface:#18222B; --ink:#E8EEF2; --muted:#92A1AD; --line:#2A3743;
+    --accent:#5BB0D4; --accent-ink:#0B1A22; --ok:#4DBB82; --miss:#E07B63; --soft:#20303B;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10171D; --surface:#18222B; --ink:#E8EEF2; --muted:#92A1AD; --line:#2A3743;
+  --accent:#5BB0D4; --accent-ink:#0B1A22; --ok:#4DBB82; --miss:#E07B63; --soft:#20303B;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+main{max-width:560px; margin:0 auto; padding:20px 16px 110px}
+h1{font-size:28px; line-height:1.1; margin:4px 0 4px; font-weight:700; letter-spacing:-0.01em}
+h2{font-size:19px; margin:26px 0 10px; font-weight:600}
+p{margin:0 0 10px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+button,input,select{font:inherit; color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+
+.top{display:flex; align-items:center; gap:12px; justify-content:space-between; flex-wrap:wrap; margin-bottom:6px}
+.date{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:9px 12px; min-height:44px}
+.progress{height:6px; background:var(--soft); border-radius:3px; margin:12px 0 16px; overflow:hidden}
+.progress > i{display:block; height:100%; background:var(--accent); width:0; transition:width .25s}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 14px 12px; margin-bottom:12px}
+.card.done{border-color:var(--accent)}
+.who{display:flex; gap:12px; align-items:center; margin-bottom:12px}
+.who b{display:block; font-size:18px; font-weight:600; line-height:1.2}
+.who span{font-size:14px; color:var(--muted)}
+.thumb{
+  width:120px; height:120px; border-radius:14px; background:var(--soft); flex:none; display:flex;
+  align-items:center; justify-content:center; color:var(--muted); font-weight:700; font-size:34px;
+  overflow:hidden; border:0; padding:0;
+}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.row-label{font-size:14px; color:var(--muted); margin:10px 0 6px}
+.lab{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.link{border:0; background:transparent; color:var(--accent); font-weight:600; font-size:14px; padding:8px 0 8px 8px; min-height:36px}
+.attempts{display:flex; gap:10px}
+.att{
+  flex:1; min-height:52px; border-radius:12px; border:2px solid var(--line);
+  background:var(--surface); font-size:22px; font-weight:700; color:var(--muted);
+}
+.att.ok{background:var(--ok); border-color:var(--ok); color:#fff}
+.att.miss{border-color:var(--miss); color:var(--miss); background:transparent}
+.valrow{display:flex; gap:8px; align-items:stretch}
+.step{
+  width:58px; min-height:52px; border-radius:12px; border:1px solid var(--line);
+  background:var(--surface); font-size:26px; font-weight:600; line-height:1;
+}
+.valbox{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:6px; min-height:52px;
+  border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:0 10px;
+}
+.valbox input{
+  width:100%; min-width:0; border:0; background:transparent; text-align:right; font-size:22px;
+  font-weight:700; padding:0; outline:none;
+}
+.valbox:focus-within{outline:3px solid var(--accent); outline-offset:2px}
+.valbox .unit{color:var(--muted); font-size:16px; min-width:24px}
+
+.primary{
+  width:100%; min-height:54px; border-radius:14px; border:0; background:var(--accent);
+  color:var(--accent-ink); font-weight:700; font-size:18px; margin-top:6px;
+}
+.ghost{
+  min-height:44px; border-radius:10px; border:1px solid var(--line); background:var(--surface);
+  padding:0 14px; font-weight:600; display:inline-flex; align-items:center; justify-content:center;
+}
+.ghost.danger{color:var(--miss); border-color:var(--miss)}
+.msg{min-height:22px; margin:8px 0 0; font-size:15px; color:var(--miss)}
+.msg.good{color:var(--ok)}
+
+.tabbar{
+  position:fixed; left:0; right:0; bottom:0; display:flex; background:var(--surface);
+  border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); z-index:5;
+}
+.tabbar button{
+  flex:1; min-height:58px; border:0; background:transparent; font-weight:600; color:var(--muted);
+  border-top:3px solid transparent;
+}
+.tabbar button[aria-current="page"]{color:var(--accent); border-top-color:var(--accent)}
+
+.stats{display:flex; gap:18px; flex-wrap:wrap; margin:10px 0 4px}
+.stats div{min-width:90px}
+.stats b{display:block; font-size:24px; font-weight:700; line-height:1.1}
+.stats span{font-size:13px; color:var(--muted)}
+
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px}
+.controls{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+.controls select{
+  flex:1; min-width:140px; min-height:44px; border-radius:10px; border:1px solid var(--line);
+  background:var(--surface); padding:0 10px;
+}
+.seg{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden}
+.seg button{border:0; background:var(--surface); padding:0 14px; min-height:44px; font-weight:600; color:var(--muted)}
+.seg button.on{background:var(--accent); color:var(--accent-ink)}
+svg.chart{width:100%; height:auto; display:block}
+.chart text{fill:var(--muted); font-size:11px; font-family:inherit}
+.chart .grid{stroke:var(--line); stroke-width:1}
+.chart .ln{fill:none; stroke:var(--accent); stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round}
+.chart .pt{fill:var(--surface); stroke:var(--accent); stroke-width:2.5}
+
+.heat{overflow-x:auto}
+.hgrid{display:grid; gap:4px; align-items:center; min-width:max-content}
+.hname{font-size:13px; padding-right:8px; white-space:nowrap; position:sticky; left:0; background:var(--surface); overflow:hidden; text-overflow:ellipsis}
+.hdate{font-size:11px; color:var(--muted); text-align:center}
+.cell{
+  width:42px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:12px; color:var(--ink);
+}
+.s-none{background:transparent; border:1px dashed var(--line); color:var(--muted); font-weight:400}
+.s0{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.s1{background:color-mix(in srgb,var(--accent) 35%,var(--surface))}
+.s2{background:color-mix(in srgb,var(--accent) 65%,var(--surface)); color:var(--accent-ink)}
+.s3{background:var(--accent); color:var(--accent-ink)}
+.legend{display:flex; gap:6px; align-items:center; font-size:12px; color:var(--muted); margin-top:10px; flex-wrap:wrap}
+.legend .cell{width:22px; height:22px; font-size:11px; border-radius:5px}
+
+.visit{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px}
+.visit-head{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.chips{display:flex; gap:4px; flex-wrap:wrap; margin-top:8px}
+.chips .cell{width:28px; height:28px; font-size:12px; border-radius:6px}
+
+.tcfg{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px}
+.tcfg-head{display:flex; gap:12px; align-items:flex-end}
+.tcfg label{display:block; font-size:13px; color:var(--muted)}
+.tcfg input[type=text]{
+  width:100%; min-height:44px; border-radius:10px; border:1px solid var(--line);
+  background:var(--surface); padding:8px 12px; margin-top:4px; color:var(--ink);
+}
+.tcfg-head label{flex:0 1 130px; min-width:0}
+.trio{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px}
+.filebtn{position:relative; cursor:pointer; color:var(--ink) !important; font-size:16px !important}
+.filebtn input{position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer}
+textarea{
+  width:100%; min-height:120px; border-radius:10px; border:1px solid var(--line);
+  background:var(--surface); padding:8px 12px; margin-top:10px; color:var(--ink);
+  font-size:12px; font-family:ui-monospace,Menlo,monospace;
+}
+.empty{text-align:center; padding:26px 12px}
+.actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+#lb{
+  position:fixed; inset:0; background:rgba(0,0,0,.82); z-index:20; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:20px; gap:12px; color:#fff;
+}
+#lb img{max-width:100%; max-height:70vh; border-radius:14px; display:block}
+@media (prefers-reduced-motion:reduce){.progress > i{transition:none}}
+</style>
+</head>
+<body>
+<main id="view" aria-live="polite"></main>
+<nav class="tabbar" aria-label="Aðalvalmynd">
+  <button data-tab="log">Skrá</button>
+  <button data-tab="overview">Yfirlit</button>
+  <button data-tab="history">Saga</button>
+  <button data-tab="settings">Verkefni</button>
+</nav>
+
+<script>
+(function(){
+  var KEY = 'maeting-v1';
+  var N = 8;
+  var store = { cfg: [], visits: [], draft: null };
+  var tab = 'log';
+  var chartTask = 'all';
+  var chartMetric = 'diff';
+  var armed = '';
+  var csvShown = false;
+  var logMsg = { text:'', good:false };
+  var setMsg = '';
+
+  function defCfg(i){ return { name: 'Verkefni ' + (i + 1), unit: 'kg', step: 2.5, start: 20, img: '' }; }
+  for (var i = 0; i < N; i++) store.cfg.push(defCfg(i));
+
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); return true; } catch (e) { return false; } }
+  function load(){
+    try {
+      var s = localStorage.getItem(KEY);
+      if (!s) return;
+      var o = JSON.parse(s);
+      if (!o || !Array.isArray(o.visits)) return;
+      if (Array.isArray(o.cfg)) {
+        for (var i = 0; i < N; i++) if (o.cfg[i]) store.cfg[i] = Object.assign(defCfg(i), o.cfg[i]);
+        store.visits = o.visits;
+        store.draft = o.draft || null;
+      } else if (Array.isArray(o.names)) {
+        // flutt úr eldri útgáfu (stig 1-5)
+        for (var j = 0; j < N; j++) store.cfg[j] = { name: o.names[j] || 'Verkefni ' + (j + 1), unit: 'stig', step: 1, start: 1, img: '' };
+        o.visits.forEach(function(v){ v.tasks.forEach(function(k){ if (!k.d) k.d = null; }); });
+        store.visits = o.visits;
+        store.draft = null;
+      }
+    } catch (e) {}
+  }
+
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function todayStr(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function shortDate(s){ var p = s.split('-'); return parseInt(p[2], 10) + '.' + parseInt(p[1], 10); }
+  function longDate(s){ var p = s.split('-'); return parseInt(p[2], 10) + '.' + parseInt(p[1], 10) + '.' + p[0]; }
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function r2(v){ return Math.round(v * 100) / 100; }
+  function fmt(v){ return String(r2(v)); }
+  function num(raw){ var n = parseFloat(String(raw).replace(',', '.')); return isNaN(n) ? null : n; }
+
+  function newDraft(){
+    var t = [];
+    for (var i = 0; i < N; i++) t.push({ d: null, a: [0, 0, 0] });
+    store.draft = { date: todayStr(), tasks: t };
+  }
+  load();
+  if (!store.draft || !store.draft.tasks || store.draft.tasks.length !== N) newDraft();
+
+  function hasD(k){ return k && k.d !== null && k.d !== undefined && !isNaN(k.d); }
+  function succ(k){ return k.a.filter(function(x){ return x === 1; }).length; }
+  function tried(k){ return k.a.filter(function(x){ return x !== 0; }).length; }
+  function touched(k){ return hasD(k) || tried(k) > 0; }
+  function sortedVisits(){ return store.visits.slice().sort(function(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id; }); }
+  function lastValue(t){
+    var vs = sortedVisits();
+    for (var i = vs.length - 1; i >= 0; i--) { var k = vs[i].tasks[t]; if (hasD(k)) return k.d; }
+    return null;
+  }
+  function unitOf(t){ return store.cfg[t].unit ? ' ' + store.cfg[t].unit : ''; }
+
+  /* ---------- Skrá ---------- */
+  function thumbHTML(t, zoomable){
+    var c = store.cfg[t];
+    if (c.img) {
+      var inner = '<img src="' + esc(c.img) + '" alt="">';
+      return zoomable
+        ? '<button class="thumb" data-act="zoom" data-t="' + t + '" aria-label="Stækka mynd af ' + esc(c.name) + '">' + inner + '</button>'
+        : '<div class="thumb">' + inner + '</div>';
+    }
+    return '<div class="thumb" aria-hidden="true">' + (t + 1) + '</div>';
+  }
+  function cardHTML(t){
+    var c = store.cfg[t], tk = store.draft.tasks[t], last = lastValue(t);
+    var h = '<div class="card' + (touched(tk) ? ' done' : '') + '" id="card-' + t + '">';
+    h += '<div class="who">' + thumbHTML(t, true) + '<div><b>' + esc(c.name) + '</b><span>' + succ(tk) + ' af 3 tókust</span></div></div>';
+    h += '<div class="row-label">Tilraunir (ýttu til að skipta: tókst, tókst ekki, autt)</div><div class="attempts">';
+    for (var i = 0; i < 3; i++) {
+      var v = tk.a[i];
+      var cls = v === 1 ? 'ok' : v === 2 ? 'miss' : '';
+      var txt = v === 1 ? '✓' : v === 2 ? '✕' : (i + 1);
+      var lbl = 'Tilraun ' + (i + 1) + ': ' + (v === 1 ? 'tókst' : v === 2 ? 'tókst ekki' : 'óskráð');
+      h += '<button class="att ' + cls + '" data-act="att" data-t="' + t + '" data-i="' + i + '" aria-label="' + lbl + '">' + txt + '</button>';
+    }
+    h += '</div><div class="row-label lab"><span>Erfiðleikastig' + (c.unit ? ' (' + esc(c.unit) + ')' : '') + '</span>';
+    if (last !== null) h += '<button class="link" data-act="same" data-t="' + t + '">Eins og síðast: ' + fmt(last) + esc(unitOf(t)) + '</button>';
+    h += '</div><div class="valrow">';
+    h += '<button class="step" data-act="step" data-dir="-1" data-t="' + t + '" aria-label="Lækka um ' + fmt(c.step) + '">−</button>';
+    h += '<div class="valbox"><input type="text" inputmode="decimal" data-val="' + t + '" value="' + (hasD(tk) ? fmt(tk.d) : '') + '" placeholder="' + fmt(last !== null ? last : c.start) + '" aria-label="Erfiðleikastig í ' + esc(c.name) + '"><span class="unit">' + esc(c.unit) + '</span></div>';
+    h += '<button class="step" data-act="step" data-dir="1" data-t="' + t + '" aria-label="Hækka um ' + fmt(c.step) + '">+</button>';
+    h += '</div></div>';
+    return h;
+  }
+  function progressCount(){ return store.draft.tasks.filter(touched).length; }
+  function updateProgress(){
+    var pt = document.getElementById('progText');
+    if (pt) pt.textContent = progressCount() + ' af ' + N + ' verkefnum skráð';
+    var pb = document.getElementById('progBar');
+    if (pb) pb.style.width = (progressCount() / N * 100) + '%';
+  }
+  function refreshCard(t){
+    var el = document.getElementById('card-' + t);
+    if (el) el.outerHTML = cardHTML(t);
+    updateProgress();
+  }
+  function viewLog(){
+    var h = '<div class="top"><h1>Ný mæting</h1><input class="date" type="date" id="dateIn" value="' + esc(store.draft.date) + '" aria-label="Dagsetning"></div>';
+    h += '<p class="muted small" id="progText"></p><div class="progress"><i id="progBar" style="width:0"></i></div>';
+    for (var t = 0; t < N; t++) h += cardHTML(t);
+    h += '<button class="primary" data-act="save">Vista mætingu</button>';
+    h += '<p class="msg' + (logMsg.good ? ' good' : '') + '">' + esc(logMsg.text) + '</p>';
+    return h;
+  }
+
+  /* ---------- Yfirlit ---------- */
+  function niceTicks(min, max){
+    if (min === null || max === null) return { lo: 0, hi: 10, ticks: [0, 2.5, 5, 7.5, 10] };
+    if (min === max) { min -= 1; max += 1; }
+    var raw = (max - min) / 4, mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10)), nm = raw / mag;
+    var step = (nm < 1.5 ? 1 : nm < 3 ? 2 : nm < 7 ? 5 : 10) * mag;
+    var lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, ticks = [];
+    for (var v = lo; v <= hi + step * 0.001; v += step) ticks.push(r2(v));
+    return { lo: lo, hi: hi, ticks: ticks };
+  }
+  function lineChart(pts, ymin, ymax, ticks, fmtT){
+    var W = 340, H = 200, L = 46, R = 12, T = 12, B = 28;
+    var n = pts.length;
+    function X(i){ return n === 1 ? (L + (W - R)) / 2 : L + i * (W - L - R) / (n - 1); }
+    function Y(v){ return T + (ymax - v) / (ymax - ymin) * (H - T - B); }
+    var s = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Línurit yfir tíma">';
+    ticks.forEach(function(tk){
+      s += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(tk) + '" y2="' + Y(tk) + '"/>';
+      s += '<text x="' + (L - 6) + '" y="' + (Y(tk) + 4) + '" text-anchor="end">' + fmtT(tk) + '</text>';
+    });
+    var step = Math.max(1, Math.ceil(n / 6));
+    pts.forEach(function(p, i){
+      if (i % step === 0 || i === n - 1) s += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + shortDate(p.date) + '</text>';
+    });
+    var path = '', open = false;
+    pts.forEach(function(p, i){
+      if (p.v === null) { open = false; return; }
+      path += (open ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.v).toFixed(1) + ' ';
+      open = true;
+    });
+    if (path) s += '<path class="ln" d="' + path + '"/>';
+    pts.forEach(function(p, i){
+      if (p.v !== null) s += '<circle class="pt" cx="' + X(i).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="4.5"/>';
+    });
+    return s + '</svg>';
+  }
+  function chartHTML(vs){
+    var pts, nt, fmtT, cap;
+    if (chartMetric === 'succ') {
+      pts = vs.map(function(v){
+        var tasks = chartTask === 'all' ? v.tasks : [v.tasks[parseInt(chartTask, 10)]];
+        var tr = 0, su = 0;
+        tasks.forEach(function(k){ if (k) { tr += tried(k); su += succ(k); } });
+        return { date: v.date, v: tr ? su / tr * 100 : null };
+      });
+      nt = { lo: 0, hi: 100, ticks: [0, 25, 50, 75, 100] };
+      fmtT = function(v){ return v + '%'; };
+      cap = 'Hlutfall tilrauna sem tókust, á hverja mætingu.';
+    } else if (chartTask === 'all') {
+      var base = [];
+      for (var t0 = 0; t0 < N; t0++) base.push(null);
+      vs.forEach(function(v){ v.tasks.forEach(function(k, t){ if (base[t] === null && hasD(k) && k.d > 0) base[t] = k.d; }); });
+      pts = vs.map(function(v){
+        var s = 0, c = 0;
+        v.tasks.forEach(function(k, t){ if (hasD(k) && base[t]) { s += k.d / base[t] * 100; c++; } });
+        return { date: v.date, v: c ? s / c : null };
+      });
+      fmtT = function(v){ return v + '%'; };
+      cap = 'Meðaltal allra verkefna miðað við fyrstu skráningu hvers þeirra (100% = byrjun). Veldu eitt verkefni til að sjá raunveruleg gildi.';
+    } else {
+      var ti = parseInt(chartTask, 10);
+      pts = vs.map(function(v){ var k = v.tasks[ti]; return { date: v.date, v: hasD(k) ? k.d : null }; });
+      var u = store.cfg[ti].unit;
+      fmtT = function(v){ return v; };
+      cap = 'Skráð erfiðleikastig' + (u ? ' (' + u + ')' : '') + ' á hverja mætingu.';
+    }
+    if (!nt) {
+      var vals = pts.filter(function(p){ return p.v !== null; }).map(function(p){ return p.v; });
+      nt = niceTicks(vals.length ? Math.min.apply(null, vals) : null, vals.length ? Math.max.apply(null, vals) : null);
+    }
+    return lineChart(pts, nt.lo, nt.hi, nt.ticks, fmtT) + '<p class="muted small" style="margin:6px 0 0">' + esc(cap) + '</p>';
+  }
+  function viewOverview(){
+    var vs = sortedVisits();
+    if (!vs.length) {
+      return '<h1>Yfirlit</h1><div class="panel empty"><p><b>Engar mætingar skráðar enn.</b></p><p class="muted">Skráðu fyrstu mætinguna, eða settu inn sýnigögn til að sjá hvernig yfirlitið lítur út.</p><div class="actions" style="justify-content:center"><button class="ghost" data-tab="log">Skrá mætingu</button><button class="ghost" data-act="demo">Setja inn sýnigögn</button></div></div>';
+    }
+    var allTried = 0, allSucc = 0;
+    vs.forEach(function(v){ v.tasks.forEach(function(k){ allTried += tried(k); allSucc += succ(k); }); });
+    var h = '<h1>Yfirlit</h1><div class="stats"><div><b>' + vs.length + '</b><span>mætingar</span></div>';
+    h += '<div><b>' + (allTried ? Math.round(allSucc / allTried * 100) + '%' : '–') + '</b><span>tilrauna tókst</span></div>';
+    h += '<div><b>' + shortDate(vs[vs.length - 1].date) + '</b><span>síðasta mæting</span></div></div>';
+
+    h += '<h2>Þróun</h2><div class="panel"><div class="controls"><select id="taskSel" aria-label="Verkefni"><option value="all"' + (chartTask === 'all' ? ' selected' : '') + '>Öll verkefni</option>';
+    store.cfg.forEach(function(c, i){ h += '<option value="' + i + '"' + (chartTask === String(i) ? ' selected' : '') + '>' + esc(c.name) + '</option>'; });
+    h += '</select><div class="seg"><button class="' + (chartMetric === 'diff' ? 'on' : '') + '" data-act="metric" data-m="diff">Erfiðleiki</button><button class="' + (chartMetric === 'succ' ? 'on' : '') + '" data-act="metric" data-m="succ">Árangur</button></div></div>';
+    h += chartHTML(vs) + '</div>';
+
+    var last = vs.slice(-10);
+    h += '<h2>Verkefnin yfir tíma</h2><div class="panel"><div class="heat"><div class="hgrid" style="grid-template-columns:110px repeat(' + last.length + ',42px)"><div></div>';
+    last.forEach(function(v){ h += '<div class="hdate">' + shortDate(v.date) + '</div>'; });
+    for (var t = 0; t < N; t++) {
+      h += '<div class="hname" title="' + esc(store.cfg[t].name) + '">' + esc(store.cfg[t].name) + '</div>';
+      last.forEach(function(v){
+        var k = v.tasks[t];
+        if (!k || !touched(k)) { h += '<div class="cell s-none">·</div>'; return; }
+        h += '<div class="cell s' + succ(k) + '" title="' + succ(k) + ' af 3 tókust">' + (hasD(k) ? fmt(k.d) : '') + '</div>';
+      });
+    }
+    h += '</div></div><div class="legend"><span>Litur: hve oft tókst</span><div class="cell s0">0</div><div class="cell s1">1</div><div class="cell s2">2</div><div class="cell s3">3</div><span>Tala: erfiðleikastig</span></div></div>';
+    return h;
+  }
+
+  /* ---------- Saga ---------- */
+  function viewHistory(){
+    var vs = sortedVisits().reverse();
+    var h = '<h1>Saga</h1>';
+    if (!vs.length) return h + '<div class="panel empty"><p class="muted">Engar mætingar vistaðar enn.</p></div>';
+    vs.forEach(function(v){
+      var tr = 0, su = 0;
+      v.tasks.forEach(function(k){ tr += tried(k); su += succ(k); });
+      h += '<div class="visit"><div class="visit-head"><div><b>' + longDate(v.date) + '</b><div class="muted small">Tókst ' + su + ' af ' + tr + ' tilraunum</div></div>';
+      h += '<button class="ghost' + (armed === 'v' + v.id ? ' danger' : '') + '" data-act="delvisit" data-id="' + v.id + '">' + (armed === 'v' + v.id ? 'Staðfesta eyðingu' : 'Eyða') + '</button></div><div class="chips">';
+      v.tasks.forEach(function(k, t){
+        var tip = esc(store.cfg[t].name) + (hasD(k) ? ': ' + fmt(k.d) + esc(unitOf(t)) : '');
+        h += '<div class="cell ' + (touched(k) ? 's' + succ(k) : 's-none') + '" title="' + tip + '">' + (touched(k) ? succ(k) : '·') + '</div>';
+      });
+      h += '</div></div>';
+    });
+    return h + '<p class="muted small">Reitirnir sýna hve margar af 3 tilraunum tókust í hverju verkefni, í sömu röð og á verkefnalistanum.</p>';
+  }
+
+  /* ---------- Verkefni / stillingar ---------- */
+  function csv(){
+    var rows = ['dagsetning,verkefni,erfidleikastig,eining,tilraun1,tilraun2,tilraun3'];
+    sortedVisits().forEach(function(v){
+      v.tasks.forEach(function(k, t){
+        if (!touched(k)) return;
+        var a = k.a.map(function(x){ return x === 1 ? 'tokst' : x === 2 ? 'tokst ekki' : ''; });
+        var c = store.cfg[t];
+        rows.push([v.date, '"' + c.name.replace(/"/g, '""') + '"', hasD(k) ? k.d : '', '"' + c.unit.replace(/"/g, '""') + '"', a[0], a[1], a[2]].join(','));
+      });
+    });
+    return rows.join('\n');
+  }
+  function viewSettings(){
+    var h = '<h1>Verkefni</h1><p class="muted">Settu nafn, mynd og mælieiningu fyrir hvert verkefni. Upphafsgildi er það sem birtist þar til þú hefur skráð fyrstu mætingu, og skref segir hve mikið + og − breyta gildinu.</p>';
+    if (setMsg) h += '<p class="msg">' + esc(setMsg) + '</p>';
+    store.cfg.forEach(function(c, i){
+      h += '<div class="tcfg"><div class="tcfg-head">' + thumbHTML(i, false) + '<label>Heiti<input type="text" data-cfg="name" data-t="' + i + '" value="' + esc(c.name) + '" maxlength="40"></label></div>';
+      h += '<div class="actions"><label class="ghost filebtn">' + (c.img ? 'Skipta um mynd' : 'Velja mynd') + '<input type="file" accept="image/*" data-img="' + i + '"></label>';
+      if (c.img) h += '<button class="ghost" data-act="rmimg" data-t="' + i + '">Fjarlægja mynd</button>';
+      h += '</div><div class="trio">';
+      h += '<label>Eining<input type="text" data-cfg="unit" data-t="' + i + '" value="' + esc(c.unit) + '" maxlength="8" placeholder="kg"></label>';
+      h += '<label>Skref<input type="text" inputmode="decimal" data-cfg="step" data-t="' + i + '" value="' + fmt(c.step) + '"></label>';
+      h += '<label>Upphafsgildi<input type="text" inputmode="decimal" data-cfg="start" data-t="' + i + '" value="' + fmt(c.start) + '"></label>';
+      h += '</div></div>';
+    });
+    h += '<h2>Gögn</h2><p class="muted small">Gögn og myndir vistast aðeins í þessum vafra á þessu tæki. Afritaðu gögnin reglulega.</p><div class="actions"><button class="ghost" data-act="csv">Afrita sem CSV</button><button class="ghost" data-act="demo">Setja inn sýnigögn</button><button class="ghost' + (armed === 'clear' ? ' danger' : '') + '" data-act="clear">' + (armed === 'clear' ? 'Staðfesta: hreinsa allar mætingar' : 'Hreinsa allar mætingar') + '</button></div>';
+    if (csvShown) h += '<textarea readonly id="csvOut" aria-label="CSV gögn">' + esc(csv()) + '</textarea>';
+    return h;
+  }
+
+  /* ---------- Myndir ---------- */
+  function resizeImage(file, cb){
+    var r = new FileReader();
+    r.onerror = function(){ cb(null); };
+    r.onload = function(){
+      var im = new Image();
+      im.onerror = function(){ cb(null); };
+      im.onload = function(){
+        try {
+          var S = 320, c = document.createElement('canvas');
+          c.width = S; c.height = S;
+          var m = Math.min(im.width, im.height);
+          c.getContext('2d').drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, S, S);
+          cb(c.toDataURL('image/jpeg', 0.78));
+        } catch (e) { cb(null); }
+      };
+      im.src = r.result;
+    };
+    r.readAsDataURL(file);
+  }
+  function zoom(t){
+    var c = store.cfg[t];
+    if (!c.img) return;
+    var d = document.createElement('div');
+    d.id = 'lb';
+    d.setAttribute('role', 'dialog');
+    d.innerHTML = '<img src="' + esc(c.img) + '" alt=""><div>' + esc(c.name) + '</div><button class="ghost" type="button">Loka</button>';
+    d.addEventListener('click', function(){ d.remove(); });
+    document.body.appendChild(d);
+  }
+
+  /* ---------- Sýnigögn ---------- */
+  function demo(){
+    var seed = 7;
+    function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    var now = new Date();
+    for (var w = 7; w >= 0; w--) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - w * 7);
+      var date = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+      var tasks = [];
+      for (var t = 0; t < N; t++) {
+        var c = store.cfg[t];
+        var up = Math.round((7 - w) * 0.6 + rnd() * 1.2 + (t % 3) * 0.5);
+        var p = Math.min(0.9, 0.35 + (7 - w) * 0.05 + rnd() * 0.2);
+        tasks.push({ d: r2(c.start + up * c.step), a: [0, 0, 0].map(function(){ return rnd() < p ? 1 : 2; }) });
+      }
+      store.visits.push({ id: Date.now() + w, date: date, tasks: tasks });
+    }
+    save();
+  }
+
+  /* ---------- Rendering ---------- */
+  var views = { log: viewLog, overview: viewOverview, history: viewHistory, settings: viewSettings };
+  function render(){
+    document.getElementById('view').innerHTML = views[tab]();
+    if (tab === 'log') updateProgress();
+    var btns = document.querySelectorAll('.tabbar button');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].getAttribute('data-tab') === tab) btns[i].setAttribute('aria-current', 'page');
+      else btns[i].removeAttribute('aria-current');
+    }
+  }
+  function go(t){ tab = t; armed = ''; csvShown = false; setMsg = ''; render(); window.scrollTo(0, 0); }
+
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[data-tab],[data-act]');
+    if (!el) return;
+    if (el.hasAttribute('data-tab') && !el.hasAttribute('data-act')) { go(el.getAttribute('data-tab')); return; }
+    var act = el.getAttribute('data-act');
+    var t = parseInt(el.getAttribute('data-t'), 10);
+    if (act === 'att') {
+      var i = parseInt(el.getAttribute('data-i'), 10);
+      var cur = store.draft.tasks[t].a[i];
+      store.draft.tasks[t].a[i] = cur === 0 ? 1 : cur === 1 ? 2 : 0;
+      save(); refreshCard(t);
+    } else if (act === 'step') {
+      var tk = store.draft.tasks[t], c = store.cfg[t], last = lastValue(t);
+      var base = hasD(tk) ? tk.d : (last !== null ? last : c.start);
+      tk.d = Math.max(0, r2(base + parseInt(el.getAttribute('data-dir'), 10) * c.step));
+      save(); refreshCard(t);
+    } else if (act === 'same') {
+      store.draft.tasks[t].d = lastValue(t);
+      save(); refreshCard(t);
+    } else if (act === 'zoom') {
+      zoom(t);
+    } else if (act === 'save') {
+      if (!progressCount()) { logMsg = { text: 'Skráðu að minnsta kosti eitt verkefni áður en þú vistar.', good: false }; render(); return; }
+      store.visits.push({ id: Date.now(), date: store.draft.date, tasks: store.draft.tasks });
+      newDraft(); save();
+      logMsg = { text: '', good: false };
+      go('overview');
+    } else if (act === 'metric') {
+      chartMetric = el.getAttribute('data-m'); render();
+    } else if (act === 'delvisit') {
+      var id = el.getAttribute('data-id');
+      if (armed === 'v' + id) {
+        store.visits = store.visits.filter(function(x){ return String(x.id) !== id; });
+        armed = ''; save();
+      } else armed = 'v' + id;
+      render();
+    } else if (act === 'rmimg') {
+      store.cfg[t].img = ''; save(); render();
+    } else if (act === 'csv') {
+      csvShown = true; render();
+      var out = document.getElementById('csvOut');
+      if (out) { out.focus(); out.select(); }
+      try { navigator.clipboard.writeText(csv()); } catch (err) {}
+    } else if (act === 'demo') {
+      demo(); go('overview');
+    } else if (act === 'clear') {
+      if (armed === 'clear') { store.visits = []; newDraft(); armed = ''; save(); }
+      else armed = 'clear';
+      render();
+    }
+  });
+
+  document.addEventListener('input', function(e){
+    var el = e.target;
+    if (el.id === 'dateIn') { if (el.value) { store.draft.date = el.value; save(); } return; }
+    if (el.hasAttribute('data-val')) {
+      var t = parseInt(el.getAttribute('data-val'), 10);
+      var n = num(el.value);
+      store.draft.tasks[t].d = (el.value.trim() !== '' && n !== null && n >= 0) ? n : null;
+      save();
+      var card = document.getElementById('card-' + t);
+      if (card) card.classList.toggle('done', touched(store.draft.tasks[t]));
+      updateProgress();
+      return;
+    }
+    if (el.hasAttribute('data-cfg')) {
+      var i = parseInt(el.getAttribute('data-t'), 10), f = el.getAttribute('data-cfg'), c = store.cfg[i];
+      if (f === 'name') c.name = el.value.trim() ? el.value : 'Verkefni ' + (i + 1);
+      else if (f === 'unit') c.unit = el.value.trim();
+      else if (f === 'step') { var s = num(el.value); if (s !== null && s > 0) c.step = s; }
+      else if (f === 'start') { var st = num(el.value); if (st !== null && st >= 0) c.start = st; }
+      save();
+    }
+  });
+
+  document.addEventListener('change', function(e){
+    var el = e.target;
+    if (el.id === 'taskSel') { chartTask = el.value; render(); return; }
+    if (el.hasAttribute('data-img') && el.files && el.files[0]) {
+      var i = parseInt(el.getAttribute('data-img'), 10);
+      resizeImage(el.files[0], function(data){
+        if (!data) { setMsg = 'Ekki tókst að lesa myndina. Prófaðu aðra mynd.'; render(); return; }
+        var old = store.cfg[i].img;
+        store.cfg[i].img = data;
+        if (!save()) { store.cfg[i].img = old; setMsg = 'Ekki tókst að vista myndina, geymslan er full.'; }
+        else setMsg = '';
+        render();
+      });
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
